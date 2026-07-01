@@ -24,3 +24,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* Hiệu ứng lật 3D cho Flashcard */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  -webkit-backface-visibility: hidden; /* Thêm dòng này để fix lỗi chữ ngược */
+  backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+/* Phông chữ Khải thể (KaiTi) ưu tiên tuyệt đối cho tiếng Trung */
+.font-kaiti {
+  font-family: "楷体", "KaiTi", "Kaiti SC", "STKaiti", "华文楷体", "BiauKai", serif !important;
+}
