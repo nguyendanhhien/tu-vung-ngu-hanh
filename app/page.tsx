@@ -21,30 +21,47 @@ export default function Home() {
   const [isListOpen, setIsListOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // 1. TẢI DỮ LIỆU VÀ ĐỌC TRÍ NHỚ (LOCAL STORAGE)
   useEffect(() => {
     async function fetchData() {
       const { data, error } = await supabase.from("ngu_hanh_vocab").select("*");
       if (error) {
         console.error("Lỗi lấy dữ liệu:", error);
-      } else if (data) {
-        setVocabs(data.sort((a, b) => b.id - a.id));
+      } else if (data && data.length > 0) {
+        const sortedData = data.sort((a, b) => b.id - a.id);
+        setVocabs(sortedData);
+
+        // Đọc vị trí học cuối cùng từ localStorage
+        const savedIndex = localStorage.getItem("nguHanhLastIndex");
+        if (savedIndex !== null) {
+          const parsedIndex = parseInt(savedIndex, 10);
+          // Kiểm tra xem vị trí lưu có hợp lệ không (tránh lỗi nếu data bị xóa bớt)
+          if (parsedIndex >= 0 && parsedIndex < sortedData.length) {
+            setCurrentIndex(parsedIndex);
+          }
+        }
       }
       setLoading(false);
     }
     fetchData();
   }, []);
 
+  // 2. GHI NHỚ VỊ TRÍ MỖI KHI BẠN CHUYỂN TỪ VỰNG
+  useEffect(() => {
+    if (vocabs.length > 0) {
+      localStorage.setItem("nguHanhLastIndex", currentIndex.toString());
+    }
+  }, [currentIndex, vocabs.length]);
+
   if (loading) return <div className="h-[100dvh] flex items-center justify-center bg-black text-white text-xl">Đang kết nối với Vũ trụ...</div>;
   if (vocabs.length === 0) return <div className="h-[100dvh] flex items-center justify-center bg-black text-white text-xl text-center px-4">Chưa có linh khí nào.<br/>Hãy vào /upload để nạp nhé!</div>;
 
   const currentVocab = vocabs[currentIndex];
 
-  // Hàm tiến tới từ vựng tiếp theo
   const nextVocab = () => {
     setCurrentIndex((prev) => (prev + 1) % vocabs.length);
   };
 
-  // Hàm lùi lại từ vựng trước đó
   const prevVocab = () => {
     setCurrentIndex((prev) => (prev - 1 + vocabs.length) % vocabs.length);
   };
@@ -58,12 +75,10 @@ export default function Home() {
   return (
     <div className="h-[100dvh] w-full bg-gradient-to-br from-indigo-950 via-black to-slate-950 flex flex-col items-center justify-evenly py-2 font-sans relative overflow-hidden">
       
-      {/* Tiêu đề */}
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-purple-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] z-10 tracking-widest uppercase text-center mt-2 px-2">
         Ngũ Hành Trận Pháp
       </h1>
       
-      {/* Khu vực Trận pháp */}
       <div className="relative w-[300px] h-[320px] sm:w-[340px] sm:h-[360px] md:w-[460px] md:h-[460px] flex items-center justify-center z-10">
         <div className="absolute w-[85%] h-[85%] md:w-[95%] md:h-[95%] border-2 border-dashed border-slate-500/40 rounded-full animate-[spin_30s_linear_infinite]"></div>
         <div className="absolute w-[65%] h-[65%] md:w-[75%] md:h-[75%] border border-slate-400/20 rounded-full animate-[spin_20s_linear_infinite_reverse]"></div>
@@ -93,16 +108,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Điều khiển */}
       <div className="flex flex-col items-center z-20 mb-2 w-full px-4 max-w-md">
         <span className="text-slate-400 text-xs sm:text-sm font-medium mb-3 tracking-wider">
           Chu kỳ: {currentIndex + 1} / {vocabs.length}
         </span>
         
-        {/* Nhóm Nút: Xếp thành 2 dòng cho gọn gàng trên mobile */}
         <div className="flex flex-col w-full gap-3">
           
-          {/* Dòng 1: Quay Lại & Tiếp Theo */}
           <div className="flex justify-between gap-3 w-full">
             <button 
               onClick={prevVocab}
@@ -119,18 +131,15 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Dòng 2: Nút Danh Sách */}
           <button 
             onClick={() => setIsListOpen(true)}
             className="w-full px-4 py-2 sm:py-3 text-sm sm:text-base bg-slate-900/80 text-yellow-400 rounded-full font-bold shadow-lg border border-yellow-600/50 hover:bg-slate-800 active:scale-95 transition-all"
           >
             🔍 Mở Kho Linh Khí (Danh Sách)
           </button>
-
         </div>
       </div>
 
-      {/* POPUP MODAL: DANH SÁCH TỪ VỰNG */}
       {isListOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md h-[80vh] flex flex-col bg-slate-900 border border-indigo-500/50 rounded-2xl shadow-[0_0_40px_rgba(79,70,229,0.3)] overflow-hidden">
